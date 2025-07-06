@@ -1,25 +1,41 @@
-import { openai, createAgent, createTool } from "@inngest/agent-kit";
+import {
+  openai,
+  createAgent,
+  createTool,
+  createNetwork,
+  type Tool,
+} from "@inngest/agent-kit";
 import { Sandbox } from "@e2b/code-interpreter";
-
 import { inngest } from "./client";
-import { getSandbox } from "./utils";
+import { getSandbox, lastAssistantTextMessageContent } from "./utils";
 import { z } from "zod";
-import { f } from "node_modules/@inngest/agent-kit/dist/agent-DtzYK4l_";
+import { PROMPT } from "~/prompt";
+import { db } from "~/server/db";
 
-export const helloWorld = inngest.createFunction(
-  { id: "hello-world" },
-  { event: "test/hello.world" },
+interface AgentState {
+  summary: string;
+  files: Record<string, string>;
+}
+
+export const codeAgentFunction = inngest.createFunction(
+  { id: "code-agent" },
+  { event: "code-agent/run" },
   async ({ event, step }) => {
     const sandboxId = await step.run("get-sandbox-id", async () => {
       const sandbox = await Sandbox.create("elyria-test");
       return sandbox.sandboxId;
     });
 
-    const codeAgent = createAgent({
+    const codeAgent = createAgent<AgentState>({
       name: "code-agent",
-      system:
-        "You are an expert next.js developer. You write readable, maintainable code",
-      model: openai({ model: "gpt-4o" }),
+      description: "An expert coding agent",
+      system: PROMPT,
+      model: openai({
+        model: "gpt-4o",
+        defaultParameters: {
+          temperature: 0.1,
+        },
+      }),
       tools: [
         createTool({
           name: "terminal",
@@ -30,6 +46,7 @@ export const helloWorld = inngest.createFunction(
           handler: async ({ command }, { step }) => {
             return await step?.run("terminal", async () => {
               const buffers = { stdout: "", stderr: "" };
+
               try {
                 const sandbox = await getSandbox(sandboxId);
                 const results = await sandbox.commands.run(command, {
@@ -42,11 +59,10 @@ export const helloWorld = inngest.createFunction(
                 });
                 return results.stdout;
               } catch (e) {
-                const err = e instanceof Error ? e.message : String(e);
                 console.error(
-                  `Command failed: ${err} \nstdout: ${buffers.stdout}\nstderr: ${buffers.stderr}`,
+                  `Command failed: ${e} \nstdout: ${buffers.stdout}\nstderror: ${buffers.stderr}`,
                 );
-                return `Command failed: ${err} \nstdout: ${buffers.stdout}\nstderr: ${buffers.stderr}`;
+                return `Command failed: ${e} \nstdout: ${buffers.stdout}\nstderror: ${buffers.stderr}`;
               }
             });
           },
@@ -62,15 +78,15 @@ export const helloWorld = inngest.createFunction(
               }),
             ),
           }),
-          handler: async ({ files }, { step, network }) => {
+          handler: async (
+            { files },
+            { step, network }: Tool.Options<AgentState>,
+          ) => {
             const newFiles = await step?.run(
               "createOrUpdateFiles",
               async () => {
                 try {
-                  const stateFiles = network.state.data.files as
-                    | Record<string, string>
-                    | undefined;
-                  const updatedFiles: Record<string, string> = stateFiles ?? {};
+                  const updatedFiles = network.state.data.files ?? {};
                   const sandbox = await getSandbox(sandboxId);
                   for (const file of files) {
                     await sandbox.files.write(file.path, file.content);
@@ -78,10 +94,7 @@ export const helloWorld = inngest.createFunction(
                   }
                   return updatedFiles;
                 } catch (e) {
-                  return (
-                    "Command failed: " +
-                    (e instanceof Error ? e.message : String(e))
-                  );
+                  return "Command failed: " + e;
                 }
               },
             );
@@ -116,11 +129,37 @@ export const helloWorld = inngest.createFunction(
           },
         }),
       ],
+      lifecycle: {
+        onResponse: async ({ result, network }) => {
+          const lastAssistantMessageText =
+            lastAssistantTextMessageContent(result);
+
+          if (lastAssistantMessageText && network) {
+            if (lastAssistantMessageText.includes("<task_summary>")) {
+              network.state.data.summary = lastAssistantMessageText;
+            }
+          }
+          return result;
+        },
+      },
     });
 
-    const { output } = await codeAgent.run(
-      `Summarize the following text: ${event.data.value}`,
-    );
+    const network = createNetwork<AgentState>({
+      name: "coding-agent-network",
+      agents: [codeAgent],
+      maxIter: 15,
+      router: async ({ network }) => {
+        const summary = network.state.data.summary;
+
+        return summary ? undefined : codeAgent;
+      },
+    });
+
+    const result = await network.run(event.data.value);
+
+    const isError =
+      !result.state.data.summary ||
+      Object.keys(result.state.data.files ?? {}).length === 0;
 
     const sandboxUrl = await step.run("get-sandbox-url", async () => {
       const sandbox = await getSandbox(sandboxId);
@@ -128,6 +167,40 @@ export const helloWorld = inngest.createFunction(
       return `https://${host}`;
     });
 
-    return { output, sandboxUrl };
+    await step.run("save-result", async () => {
+      if (isError) {
+        return await db.message.create({
+          data: {
+            projectId: event.data.projectId,
+            content: "Something went wrong. Please try again.",
+            role: "ASSISTANT",
+            type: "ERROR",
+          },
+        });
+      }
+
+      return await db.message.create({
+        data: {
+          projectId: event.data.projectId,
+          content: result.state.data.summary,
+          role: "ASSISTANT",
+          type: "RESULT",
+          fragment: {
+            create: {
+              sandboxUrl: sandboxUrl,
+              title: "Fragment",
+              files: result.state.data.files,
+            },
+          },
+        },
+      });
+    });
+
+    return {
+      url: sandboxUrl,
+      title: "Fragment",
+      files: result.state.data.files,
+      summary: result.state.data.summary,
+    };
   },
 );
