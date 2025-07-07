@@ -4,14 +4,23 @@ import { inngest } from "~/inngest/client";
 import { db } from "~/server/db";
 
 export const messagesRouter = createTRPCRouter({
-  getMany: publicProcedure.query(async () => {
-    const messages = await db.message.findMany({
-      orderBy: {
-        updatedAt: "asc",
-      },
-    });
-    return messages;
-  }),
+  getMany: publicProcedure
+    .input(
+      z.object({
+        projectId: z.string().min(1, { message: "Poject ID is required" }),
+      }),
+    )
+    .query(async ({ input }) => {
+      const messages = await db.message.findMany({
+        where: {
+          projectId: input.projectId,
+        },
+        orderBy: {
+          updatedAt: "asc",
+        },
+      });
+      return messages;
+    }),
   create: publicProcedure
     .input(
       z.object({
