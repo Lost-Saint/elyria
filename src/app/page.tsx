@@ -1,21 +1,21 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { api } from "~/trpc/react";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { api } from '~/trpc/react';
 
-import { Input } from "~/components/ui/input";
-import { Button } from "~/components/ui/button";
-import { toast } from "sonner";
+import { Input } from '~/components/ui/input';
+import { Button } from '~/components/ui/button';
+import { toast } from 'sonner';
 
 export default function Home() {
   const router = useRouter();
-  const [value, setValue] = useState("");
+  const [value, setValue] = useState('');
 
   const createProject = api.projects.create.useMutation({
     onError: (error) => {
-      console.error("Mutation failed:", error.message);
+      console.error('Mutation failed:', error.message);
       toast.error(error.message);
     },
     onSuccess: (data) => {
@@ -32,7 +32,7 @@ export default function Home() {
           disabled={createProject.isPending}
           onClick={() => createProject.mutate({ value: value })}
         >
-          {createProject.isPending ? "Submitting..." : "Submit"}
+          {createProject.isPending ? 'Submitting...' : 'Submit'}
         </Button>
       </div>
     </main>

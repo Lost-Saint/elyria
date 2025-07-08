@@ -1,15 +1,15 @@
-import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
-import { generateSlug } from "random-word-slugs";
-import z from "zod";
-import { inngest } from "~/inngest/client";
-import { db } from "~/server/db";
-import { TRPCError } from "@trpc/server";
+import { createTRPCRouter, publicProcedure } from '~/server/api/trpc';
+import { generateSlug } from 'random-word-slugs';
+import z from 'zod';
+import { inngest } from '~/inngest/client';
+import { db } from '~/server/db';
+import { TRPCError } from '@trpc/server';
 
 export const projectsRouter = createTRPCRouter({
   getOne: publicProcedure
     .input(
       z.object({
-        id: z.string().min(1, { message: "ID is required" }),
+        id: z.string().min(1, { message: 'ID is required' }),
       }),
     )
     .query(async ({ input }) => {
@@ -21,8 +21,8 @@ export const projectsRouter = createTRPCRouter({
 
       if (!existingProject) {
         throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Project not found.",
+          code: 'NOT_FOUND',
+          message: 'Project not found.',
         });
       }
 
@@ -31,7 +31,7 @@ export const projectsRouter = createTRPCRouter({
   getMany: publicProcedure.query(async () => {
     const projects = await db.project.findMany({
       orderBy: {
-        updatedAt: "asc",
+        updatedAt: 'asc',
       },
     });
     return projects;
@@ -41,27 +41,27 @@ export const projectsRouter = createTRPCRouter({
       z.object({
         value: z
           .string()
-          .min(1, { message: "Prompt is required" })
-          .max(10000, { message: "Prompt is too long." }),
+          .min(1, { message: 'Prompt is required' })
+          .max(10000, { message: 'Prompt is too long.' }),
       }),
     )
     .mutation(async ({ input }) => {
       const createdProject = await db.project.create({
         data: {
           name: generateSlug(2, {
-            format: "kebab",
+            format: 'kebab',
           }),
           messages: {
             create: {
               content: input.value,
-              role: "USER",
-              type: "RESULT",
+              role: 'USER',
+              type: 'RESULT',
             },
           },
         },
       });
       await inngest.send({
-        name: "code-agent/run",
+        name: 'code-agent/run',
         data: {
           value: input.value,
           projectId: createdProject.id,

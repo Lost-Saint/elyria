@@ -1,6 +1,6 @@
-import { api, HydrateClient } from "~/trpc/server";
-import { ProjectView } from "~/modules/projects/ui/views/project-view";
-import { Suspense } from "react";
+import { api, HydrateClient } from '~/trpc/server';
+import { ProjectView } from '~/modules/projects/ui/views/project-view';
+import { Suspense } from 'react';
 
 interface Props {
   params: Promise<{

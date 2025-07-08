@@ -1,16 +1,10 @@
-import {
-  openai,
-  createAgent,
-  createTool,
-  createNetwork,
-  type Tool,
-} from "@inngest/agent-kit";
-import { Sandbox } from "@e2b/code-interpreter";
-import { inngest } from "./client";
-import { getSandbox, lastAssistantTextMessageContent } from "./utils";
-import { z } from "zod";
-import { PROMPT } from "~/prompt";
-import { db } from "~/server/db";
+import { openai, createAgent, createTool, createNetwork, type Tool } from '@inngest/agent-kit';
+import { Sandbox } from '@e2b/code-interpreter';
+import { inngest } from './client';
+import { getSandbox, lastAssistantTextMessageContent } from './utils';
+import { z } from 'zod';
+import { PROMPT } from '~/prompt';
+import { db } from '~/server/db';
 
 interface AgentState {
   summary: string;
@@ -18,34 +12,34 @@ interface AgentState {
 }
 
 export const codeAgentFunction = inngest.createFunction(
-  { id: "code-agent" },
-  { event: "code-agent/run" },
+  { id: 'code-agent' },
+  { event: 'code-agent/run' },
   async ({ event, step }) => {
-    const sandboxId = await step.run("get-sandbox-id", async () => {
-      const sandbox = await Sandbox.create("elyria-test");
+    const sandboxId = await step.run('get-sandbox-id', async () => {
+      const sandbox = await Sandbox.create('elyria-test');
       return sandbox.sandboxId;
     });
 
     const codeAgent = createAgent<AgentState>({
-      name: "code-agent",
-      description: "An expert coding agent",
+      name: 'code-agent',
+      description: 'An expert coding agent',
       system: PROMPT,
       model: openai({
-        model: "gpt-4.1",
+        model: 'gpt-4.1',
         defaultParameters: {
           temperature: 0.1,
         },
       }),
       tools: [
         createTool({
-          name: "terminal",
-          description: "User the terminal to run commands",
+          name: 'terminal',
+          description: 'User the terminal to run commands',
           parameters: z.object({
             command: z.string(),
           }),
           handler: async ({ command }, { step }) => {
-            return await step?.run("terminal", async () => {
-              const buffers = { stdout: "", stderr: "" };
+            return await step?.run('terminal', async () => {
+              const buffers = { stdout: '', stderr: '' };
 
               try {
                 const sandbox = await getSandbox(sandboxId);
@@ -68,8 +62,8 @@ export const codeAgentFunction = inngest.createFunction(
           },
         }),
         createTool({
-          name: "createOrUpdateFiles",
-          description: "Create or update file in the sandbox",
+          name: 'createOrUpdateFiles',
+          description: 'Create or update file in the sandbox',
           parameters: z.object({
             files: z.array(
               z.object({
@@ -78,39 +72,33 @@ export const codeAgentFunction = inngest.createFunction(
               }),
             ),
           }),
-          handler: async (
-            { files },
-            { step, network }: Tool.Options<AgentState>,
-          ) => {
-            const newFiles = await step?.run(
-              "createOrUpdateFiles",
-              async () => {
-                try {
-                  const updatedFiles = network.state.data.files ?? {};
-                  const sandbox = await getSandbox(sandboxId);
-                  for (const file of files) {
-                    await sandbox.files.write(file.path, file.content);
-                    updatedFiles[file.path] = file.content;
-                  }
-                  return updatedFiles;
-                } catch (e) {
-                  return "Command failed: " + e;
+          handler: async ({ files }, { step, network }: Tool.Options<AgentState>) => {
+            const newFiles = await step?.run('createOrUpdateFiles', async () => {
+              try {
+                const updatedFiles = network.state.data.files ?? {};
+                const sandbox = await getSandbox(sandboxId);
+                for (const file of files) {
+                  await sandbox.files.write(file.path, file.content);
+                  updatedFiles[file.path] = file.content;
                 }
-              },
-            );
-            if (typeof newFiles === "object") {
+                return updatedFiles;
+              } catch (e) {
+                return 'Command failed: ' + e;
+              }
+            });
+            if (typeof newFiles === 'object') {
               network.state.data.files = newFiles;
             }
           },
         }),
         createTool({
-          name: "readFiles",
-          description: "Read files from the sandbox",
+          name: 'readFiles',
+          description: 'Read files from the sandbox',
           parameters: z.object({
             files: z.array(z.string()),
           }),
           handler: async ({ files }, { step }) => {
-            return await step?.run("readFiles", async () => {
+            return await step?.run('readFiles', async () => {
               try {
                 const sandbox = await getSandbox(sandboxId);
                 const contents = [];
@@ -120,10 +108,7 @@ export const codeAgentFunction = inngest.createFunction(
                 }
                 return JSON.stringify(contents);
               } catch (e) {
-                return (
-                  "Command failed: " +
-                  (e instanceof Error ? e.message : String(e))
-                );
+                return 'Command failed: ' + (e instanceof Error ? e.message : String(e));
               }
             });
           },
@@ -131,11 +116,10 @@ export const codeAgentFunction = inngest.createFunction(
       ],
       lifecycle: {
         onResponse: async ({ result, network }) => {
-          const lastAssistantMessageText =
-            lastAssistantTextMessageContent(result);
+          const lastAssistantMessageText = lastAssistantTextMessageContent(result);
 
           if (lastAssistantMessageText && network) {
-            if (lastAssistantMessageText.includes("<task_summary>")) {
+            if (lastAssistantMessageText.includes('<task_summary>')) {
               network.state.data.summary = lastAssistantMessageText;
             }
           }
@@ -145,7 +129,7 @@ export const codeAgentFunction = inngest.createFunction(
     });
 
     const network = createNetwork<AgentState>({
-      name: "coding-agent-network",
+      name: 'coding-agent-network',
       agents: [codeAgent],
       maxIter: 15,
       router: async ({ network }) => {
@@ -158,23 +142,22 @@ export const codeAgentFunction = inngest.createFunction(
     const result = await network.run(event.data.value);
 
     const isError =
-      !result.state.data.summary ||
-      Object.keys(result.state.data.files ?? {}).length === 0;
+      !result.state.data.summary || Object.keys(result.state.data.files ?? {}).length === 0;
 
-    const sandboxUrl = await step.run("get-sandbox-url", async () => {
+    const sandboxUrl = await step.run('get-sandbox-url', async () => {
       const sandbox = await getSandbox(sandboxId);
       const host = sandbox.getHost(3000);
       return `https://${host}`;
     });
 
-    await step.run("save-result", async () => {
+    await step.run('save-result', async () => {
       if (isError) {
         return await db.message.create({
           data: {
             projectId: event.data.projectId,
-            content: "Something went wrong. Please try again.",
-            role: "ASSISTANT",
-            type: "ERROR",
+            content: 'Something went wrong. Please try again.',
+            role: 'ASSISTANT',
+            type: 'ERROR',
           },
         });
       }
@@ -183,12 +166,12 @@ export const codeAgentFunction = inngest.createFunction(
         data: {
           projectId: event.data.projectId,
           content: result.state.data.summary,
-          role: "ASSISTANT",
-          type: "RESULT",
+          role: 'ASSISTANT',
+          type: 'RESULT',
           fragment: {
             create: {
               sandboxUrl: sandboxUrl,
-              title: "Fragment",
+              title: 'Fragment',
               files: result.state.data.files,
             },
           },
@@ -198,7 +181,7 @@ export const codeAgentFunction = inngest.createFunction(
 
     return {
       url: sandboxUrl,
-      title: "Fragment",
+      title: 'Fragment',
       files: result.state.data.files,
       summary: result.state.data.summary,
     };

@@ -1,9 +1,9 @@
-import type { MessageRole, Fragment, MessageType } from "@prisma/client";
-import { Card } from "~/components/ui/card";
-import { format } from "date-fns";
-import { cn } from "~/lib/utils";
-import Image from "next/image";
-import { ChevronRightIcon, Code2Icon } from "lucide-react";
+import type { MessageRole, Fragment, MessageType } from '@prisma/client';
+import { Card } from '~/components/ui/card';
+import { format } from 'date-fns';
+import { cn } from '~/lib/utils';
+import Image from 'next/image';
+import { ChevronRightIcon, Code2Icon } from 'lucide-react';
 
 // User message
 const UserMessage = ({ content }: { content: string }) => (
@@ -26,9 +26,8 @@ const FragmentCard = ({
 }) => (
   <button
     className={cn(
-      "bg-muted hover:bg-secondary flex w-fit items-start gap-2 rounded-lg border p-3 text-start transition-colors",
-      isActiveFragment &&
-        "bg-primary text-primary-foreground border-primary hover:bg-primary",
+      'bg-muted hover:bg-secondary flex w-fit items-start gap-2 rounded-lg border p-3 text-start transition-colors',
+      isActiveFragment && 'bg-primary text-primary-foreground border-primary hover:bg-primary',
     )}
     onClick={() => onFragmentClick(fragment)}
   >
@@ -61,18 +60,12 @@ const AssistantMessage = ({
 }) => (
   <div
     className={cn(
-      "group flex flex-col px-2 pb-4",
-      type === "ERROR" && "text-red-700 dark:text-red-500",
+      'group flex flex-col px-2 pb-4',
+      type === 'ERROR' && 'text-red-700 dark:text-red-500',
     )}
   >
     <div className="mb-2 flex items-center gap-2 pl-2">
-      <Image
-        src="/logo.svg"
-        alt="Elyria"
-        width={18}
-        height={18}
-        className="shrink-0"
-      />
+      <Image src="/logo.svg" alt="Elyria" width={18} height={18} className="shrink-0" />
       <span className="text-sm font-medium">Elyria</span>
       <span className="text-muted-foreground text-xs opacity-0 transition-opacity group-hover:opacity-100">
         {format(createdAt, "HH:mm 'on' MMM dd, yyyy")}
@@ -80,7 +73,7 @@ const AssistantMessage = ({
     </div>
     <div className="flex flex-col gap-y-4 pl-8.5">
       <span>{content}</span>
-      {fragment && type === "RESULT" && (
+      {fragment && type === 'RESULT' && (
         <FragmentCard
           fragment={fragment}
           isActiveFragment={isActiveFragment}
@@ -109,7 +102,7 @@ export const MessageCard = ({
   onFragmentClick: (fragment: Fragment) => void;
   type: MessageType;
 }) =>
-  role === "ASSISTANT" ? (
+  role === 'ASSISTANT' ? (
     <AssistantMessage
       content={content}
       fragment={fragment}
