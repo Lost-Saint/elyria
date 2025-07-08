@@ -1,15 +1,15 @@
-import { z } from "zod";
-import { toast } from "sonner";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import TextareaAutosize from "react-textarea-autosize";
-import { ArrowUpIcon, Loader2Icon } from "lucide-react";
+import { z } from 'zod';
+import { toast } from 'sonner';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import TextareaAutosize from 'react-textarea-autosize';
+import { ArrowUpIcon, Loader2Icon } from 'lucide-react';
 
-import { cn } from "~/lib/utils";
-import { Button } from "~/components/ui/button";
-import { Form, FormField } from "~/components/ui/form";
-import { api } from "~/trpc/react";
+import { cn } from '~/lib/utils';
+import { Button } from '~/components/ui/button';
+import { Form, FormField } from '~/components/ui/form';
+import { api } from '~/trpc/react';
 
 interface Props {
   projectId: string;
@@ -18,15 +18,15 @@ interface Props {
 const formSchema = z.object({
   value: z
     .string()
-    .min(1, { message: "Value is required" })
-    .max(10000, { message: "Value is too long." }),
+    .min(1, { message: 'Value is required' })
+    .max(10000, { message: 'Value is too long.' }),
 });
 
 export const MessageForm = ({ projectId }: Props) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      value: "",
+      value: '',
     },
   });
 
@@ -61,9 +61,9 @@ export const MessageForm = ({ projectId }: Props) => {
       <form
         onSubmit={form.handleSubmit(onSubmit)}
         className={cn(
-          "bg-sidebar dark:bg-sidebar relative rounded-xl border p-4 pt-1 transition-all",
-          isFocused && "shadow-xs",
-          showUsage && "rounded-t-none",
+          'bg-sidebar dark:bg-sidebar relative rounded-xl border p-4 pt-1 transition-all',
+          isFocused && 'shadow-xs',
+          showUsage && 'rounded-t-none',
         )}
       >
         <FormField
@@ -79,7 +79,7 @@ export const MessageForm = ({ projectId }: Props) => {
               maxRows={8}
               className="w-full resize-none border-none bg-transparent pt-4 outline-none"
               onKeyDown={(e) => {
-                if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+                if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
                   e.preventDefault();
                   void form.handleSubmit(onSubmit)(e);
                 }
@@ -96,16 +96,9 @@ export const MessageForm = ({ projectId }: Props) => {
           </div>
           <Button
             disabled={isButtonDisabled}
-            className={cn(
-              "size-8 rounded-full",
-              isButtonDisabled && "bg-muted-foreground border",
-            )}
+            className={cn('size-8 rounded-full', isButtonDisabled && 'bg-muted-foreground border')}
           >
-            {isPending ? (
-              <Loader2Icon className="size-4 animate-spin" />
-            ) : (
-              <ArrowUpIcon />
-            )}
+            {isPending ? <Loader2Icon className="size-4 animate-spin" /> : <ArrowUpIcon />}
           </Button>
         </div>
       </form>

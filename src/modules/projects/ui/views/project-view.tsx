@@ -1,12 +1,8 @@
-"use client";
+'use client';
 
-import { Suspense } from "react";
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "~/components/ui/resizable";
-import { MessagesContainer } from "../components/messages-container";
+import { Suspense } from 'react';
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '~/components/ui/resizable';
+import { MessagesContainer } from '../components/messages-container';
 
 interface Props {
   projectId: string;
@@ -16,11 +12,7 @@ export const ProjectView = ({ projectId }: Props) => {
   return (
     <div className="h-screen">
       <ResizablePanelGroup direction="horizontal">
-        <ResizablePanel
-          defaultSize={35}
-          minSize={25}
-          className="flex min-h-0 flex-col"
-        >
+        <ResizablePanel defaultSize={35} minSize={25} className="flex min-h-0 flex-col">
           <Suspense fallback={<p>Loading messages...</p>}>
             <MessagesContainer projectId={projectId} />
           </Suspense>

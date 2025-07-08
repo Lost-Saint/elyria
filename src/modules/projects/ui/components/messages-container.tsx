@@ -1,7 +1,7 @@
-import { useEffect, useRef } from "react";
-import { api } from "~/trpc/react";
-import { MessageCard } from "./message-card";
-import { MessageForm } from "./message-form";
+import { useEffect, useRef } from 'react';
+import { api } from '~/trpc/react';
+import { MessageCard } from './message-card';
+import { MessageForm } from './message-form';
 
 interface Props {
   projectId: string;
@@ -14,9 +14,7 @@ export const MessagesContainer = ({ projectId }: Props) => {
   });
 
   useEffect(() => {
-    const lastAssistantMessage = messages.findLast(
-      (message) => message.role === "ASSISTANT",
-    );
+    const lastAssistantMessage = messages.findLast((message) => message.role === 'ASSISTANT');
 
     if (lastAssistantMessage) {
       // set active fragment
