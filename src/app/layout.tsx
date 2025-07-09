@@ -4,6 +4,8 @@ import { type Metadata } from 'next';
 import { Geist } from 'next/font/google';
 
 import { TRPCReactProvider } from '~/trpc/react';
+import { Toaster } from 'sonner';
+import { ThemeProvider } from 'next-themes';
 
 export const metadata: Metadata = {
   title: 'Create T3 App',
@@ -18,10 +20,20 @@ const geist = Geist({
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${geist.variable}`}>
-      <body>
-        <TRPCReactProvider>{children}</TRPCReactProvider>
-      </body>
-    </html>
+    <TRPCReactProvider>
+      <html lang="en" suppressHydrationWarning>
+        <body className={`${geist.variable} antialiased`}>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <Toaster />
+            {children}
+          </ThemeProvider>
+        </body>
+      </html>
+    </TRPCReactProvider>
   );
 }

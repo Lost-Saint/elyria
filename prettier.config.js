@@ -9,5 +9,5 @@ export default {
   trailingComma: 'all',
   bracketSpacing: true,
   jsxSingleQuote: false,
-  endOfLine: 'auto',
+  endOfLine: 'auto'
 };

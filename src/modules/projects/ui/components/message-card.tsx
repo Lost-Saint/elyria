@@ -5,7 +5,6 @@ import { cn } from '~/lib/utils';
 import Image from 'next/image';
 import { ChevronRightIcon, Code2Icon } from 'lucide-react';
 
-// User message
 const UserMessage = ({ content }: { content: string }) => (
   <div className="flex justify-end pr-2 pb-2 pl-10">
     <Card className="bg-muted max-w-[80%] rounded-lg border-none p-3 break-words shadow-none">
@@ -14,7 +13,6 @@ const UserMessage = ({ content }: { content: string }) => (
   </div>
 );
 
-// Fragment preview card
 const FragmentCard = ({
   fragment,
   isActiveFragment,
@@ -42,7 +40,6 @@ const FragmentCard = ({
   </button>
 );
 
-// Assistant message
 const AssistantMessage = ({
   content,
   fragment,
@@ -84,7 +81,6 @@ const AssistantMessage = ({
   </div>
 );
 
-// Message wrapper
 export const MessageCard = ({
   content,
   role,
