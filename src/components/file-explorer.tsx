@@ -1,9 +1,12 @@
-import { useState } from 'react';
+import { Fragment, useCallback, useMemo, useState } from 'react';
 import { Hint } from './hints';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from './ui/resizable';
 import { Button } from './ui/button';
 import { CopyIcon } from 'lucide-react';
 import { CodeView } from './code-view';
+import { convertFilesToTreeItems } from '~/lib/utils';
+import { TreeView } from './tree-view';
+import { BreadcrumbItem, BreadcrumbPage, BreadcrumbSeparator } from './ui/breadcrumb';
 
 type FileCollection = Record<string, string>;
 
@@ -12,6 +15,36 @@ function getLanguageFromExtension(filename: string): string {
   return extension ?? 'text';
 }
 
+interface FileBreadCrumbProps {
+  filePath: string;
+}
+const FileBreadCrumb = ({ filePath }: FileBreadCrumbProps) => {
+  const pathSegments = filePath.split('/');
+  const maxSegments = 4;
+
+  const renderBreadCrumbItems = () => {
+    if (pathSegments.length <= maxSegments) {
+      // show all segments or less
+      return pathSegments.map((segment, index) => {
+        const isLast = index === pathSegments.length - 1;
+        return (
+          <Fragment key={index}>
+            <BreadcrumbItem>
+              {isLast ? (
+                <BreadcrumbPage className="font-medium">{segment}</BreadcrumbPage>
+              ) : (
+                <span className="text-muted-foreground">{segment}</span>
+              )}
+            </BreadcrumbItem>
+            {!isLast && <BreadcrumbSeparator />}
+          </Fragment>
+        );
+      });
+    } else {
+    }
+  };
+};
+
 interface FileExporerProps {
   files: FileCollection;
 }
@@ -19,12 +52,26 @@ interface FileExporerProps {
 export const FileExporer = ({ files }: FileExporerProps) => {
   const [selectedFile, setSelectedFile] = useState<string | null>(() => {
     const fileKeys = Object.keys(files);
-    return fileKeys.length > 0 ? fileKeys[0] : null;
+    return fileKeys.length > 0 ? (fileKeys[0] ?? null) : null;
   });
+
+  const treeData = useMemo(() => {
+    return convertFilesToTreeItems(files);
+  }, [files]);
+
+  const handleFileSelect = useCallback(
+    (filePath: string) => {
+      if (files[filePath]) {
+        setSelectedFile(filePath);
+      }
+    },
+    [files],
+  );
+
   return (
     <ResizablePanelGroup direction="horizontal">
       <ResizablePanel defaultSize={30} minSize={30} className="bg-sidebar">
-        <TreeView data={[]} value={selectedFile} onSelect={} />
+        <TreeView data={treeData} value={selectedFile} onSelect={handleFileSelect} />
       </ResizablePanel>
       <ResizableHandle className="hover:bg-primary transition-colors" />
       <ResizablePanel defaultSize={70} minSize={50}>
@@ -38,7 +85,9 @@ export const FileExporer = ({ files }: FileExporerProps) => {
                   size="icon"
                   disabled={false}
                   className="ml-auto"
-                  onClick={() => {}}
+                  onClick={() => {
+                    /* */
+                  }}
                 >
                   <CopyIcon />
                 </Button>

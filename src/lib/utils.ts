@@ -7,45 +7,72 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
- * Convert a record of files to a tree structure.
- * @param files - Record of file paths to content
- * @returns Tree structure for TreeView component
+ * Converts a flat record of file paths to a hierarchical tree structure
+ *
+ * Processes file paths by splitting on '/' and building a nested tree where
+ * folders are represented as arrays with the folder name as the first element,
+ * followed by their contents.
+ *
+ * @param files - Record mapping file paths to their content
+ * @returns Hierarchical tree structure compatible with TreeView component
  *
  * @example
- * Input: { "src/Button.tsx": "...", "README.md": "..." }
- * Output: [["src", "Button.tsx"], "README.md"]
+ * ```typescript
+ * const files = {
+ *   "src/components/Button.tsx": "export const Button = ...",
+ *   "src/utils/helpers.ts": "export function helper() ...",
+ *   "README.md": "# Project"
+ * };
+ *
+ * const tree = convertFilesToTreeItems(files);
+ * // Result: [
+ * //   ["src",
+ * //     ["components", "Button.tsx"],
+ * //     ["utils", "helpers.ts"]
+ * //   ],
+ * //   "README.md"
+ * // ]
+ * ```
  */
 export function convertFilesToTreeItems(files: Record<string, string>): TreeItem[] {
-  // Define proper type for tree structure
   interface TreeNode {
     [key: string]: TreeNode | null;
   }
 
-  // Build a tree structure first
   const tree: TreeNode = {};
 
-  // Sort files to ensure consistent ordering
   const sortedPaths = Object.keys(files).sort();
 
   for (const filePath of sortedPaths) {
     const parts = filePath.split('/');
-    let current = tree;
+    let current: TreeNode = tree;
 
     // Navigate/create the tree structure
     for (let i = 0; i < parts.length - 1; i++) {
       const part = parts[i];
-      if (!current[part]) {
+      if (part && !current[part]) {
         current[part] = {};
       }
-      current = current[part];
+      // Type assertion since we know current[part] is TreeNode after null check
+      if (part && current[part] !== null) {
+        current = current[part]!;
+      }
     }
 
     // Add the file (leaf node)
     const fileName = parts[parts.length - 1];
-    current[fileName] = null; // null indicates it's a file
+    if (fileName) {
+      current[fileName] = null; // null indicates it's a file
+    }
   }
 
-  // Convert tree structure to TreeItem format
+  /**
+   * Recursively converts tree node structure to TreeItem format
+   *
+   * @param node - Tree node to convert
+   * @param name - Optional name for the current node
+   * @returns TreeItem array or single TreeItem
+   */
   function convertNode(node: TreeNode, name?: string): TreeItem[] | TreeItem {
     const entries = Object.entries(node);
 
