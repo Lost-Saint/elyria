@@ -2,11 +2,18 @@ import { Fragment, useCallback, useMemo, useState } from 'react';
 import { Hint } from './hints';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from './ui/resizable';
 import { Button } from './ui/button';
-import { CopyIcon } from 'lucide-react';
+import { CopyCheckIcon, CopyIcon } from 'lucide-react';
 import { CodeView } from './code-view';
 import { convertFilesToTreeItems } from '~/lib/utils';
 import { TreeView } from './tree-view';
-import { BreadcrumbItem, BreadcrumbPage, BreadcrumbSeparator } from './ui/breadcrumb';
+import {
+  Breadcrumb,
+  BreadcrumbEllipsis,
+  BreadcrumbItem,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from './ui/breadcrumb';
 
 type FileCollection = Record<string, string>;
 
@@ -41,8 +48,30 @@ const FileBreadCrumb = ({ filePath }: FileBreadCrumbProps) => {
         );
       });
     } else {
+      const firstSegment = pathSegments[0];
+      const lastSegment = pathSegments[pathSegments.length - 1];
+      return (
+        <>
+          <BreadcrumbItem>
+            <span className="text-muted-foreground">{firstSegment}</span>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbEllipsis />
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage className="font-medium">{lastSegment}</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbItem>
+        </>
+      );
     }
   };
+  return (
+    <Breadcrumb>
+      <BreadcrumbList>{renderBreadCrumbItems()}</BreadcrumbList>
+    </Breadcrumb>
+  );
 };
 
 interface FileExporerProps {
@@ -50,6 +79,7 @@ interface FileExporerProps {
 }
 
 export const FileExporer = ({ files }: FileExporerProps) => {
+  const [copied, setCopied] = useState(false);
   const [selectedFile, setSelectedFile] = useState<string | null>(() => {
     const fileKeys = Object.keys(files);
     return fileKeys.length > 0 ? (fileKeys[0] ?? null) : null;
@@ -68,6 +98,20 @@ export const FileExporer = ({ files }: FileExporerProps) => {
     [files],
   );
 
+  const handleCopy = useCallback(() => {
+    if (selectedFile) {
+      navigator.clipboard
+        .writeText(files[selectedFile]!)
+        .then(() => {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        })
+        .catch(() => {
+          console.warn('Failed to copy to clipboard');
+        });
+    }
+  }, [selectedFile, files]);
+
   return (
     <ResizablePanelGroup direction="horizontal">
       <ResizablePanel defaultSize={30} minSize={30} className="bg-sidebar">
@@ -78,18 +122,16 @@ export const FileExporer = ({ files }: FileExporerProps) => {
         {selectedFile && files[selectedFile] ? (
           <div className="flex h-full w-full flex-col">
             <div className="bg-sidebar flex items-center justify-between gap-x-2 border-b px-2 py-2">
-              {/* TODO: file breadcrumb */}
+              <FileBreadCrumb filePath={selectedFile} />
               <Hint text="Copy to clipboard" side="bottom">
                 <Button
                   variant="outline"
                   size="icon"
-                  disabled={false}
+                  disabled={copied}
                   className="ml-auto"
-                  onClick={() => {
-                    /* */
-                  }}
+                  onClick={handleCopy}
                 >
-                  <CopyIcon />
+                  {copied ? <CopyCheckIcon /> : <CopyIcon />}
                 </Button>
               </Hint>
             </div>
