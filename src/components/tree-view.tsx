@@ -95,7 +95,7 @@ const Tree = ({ item, parentPath, onSelect, selectedValue }: TreeProps) => {
                 item={subItem}
                 selectedValue={selectedValue}
                 onSelect={onSelect}
-                parentPath={parentPath}
+                parentPath={currentPath}
               />
             ))}
           </SidebarMenuSub>
