@@ -27,11 +27,11 @@ interface FileBreadCrumbProps {
 }
 const FileBreadCrumb = ({ filePath }: FileBreadCrumbProps) => {
   const pathSegments = filePath.split('/');
-  const maxSegments = 4;
+  const maxSegments = 3;
 
   const renderBreadCrumbItems = () => {
     if (pathSegments.length <= maxSegments) {
-      // show all segments or less
+      // show all segments or less 3
       return pathSegments.map((segment, index) => {
         const isLast = index === pathSegments.length - 1;
         return (
@@ -78,7 +78,7 @@ interface FileExporerProps {
   files: FileCollection;
 }
 
-export const FileExporer = ({ files }: FileExporerProps) => {
+export const FileExplorer = ({ files }: FileExporerProps) => {
   const [copied, setCopied] = useState(false);
   const [selectedFile, setSelectedFile] = useState<string | null>(() => {
     const fileKeys = Object.keys(files);
