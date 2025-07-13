@@ -8,9 +8,12 @@ export const env = createEnv({
    */
   server: {
     DATABASE_URL: z.string().url(),
+    OPENAI_API_KEY: z.string().min(1),
+    E2B_API_KEY: z.string().min(1),
+    BETTER_AUTH_SECRET: z.string().min(1),
+    BETTER_AUTH_URL: z.string().url(),
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   },
-
   /**
    * Specify your client-side environment variables schema here. This way you can ensure the app
    * isn't built with invalid env vars. To expose them to the client, prefix them with
@@ -19,13 +22,16 @@ export const env = createEnv({
   client: {
     // NEXT_PUBLIC_CLIENTVAR: z.string(),
   },
-
   /**
    * You can't destruct `process.env` as a regular object in the Next.js edge runtimes (e.g.
    * middlewares) or client-side so we need to destruct manually.
    */
   runtimeEnv: {
     DATABASE_URL: process.env.DATABASE_URL,
+    OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+    E2B_API_KEY: process.env.E2B_API_KEY,
+    BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
+    BETTER_AUTH_URL: process.env.BETTER_AUTH_URL,
     NODE_ENV: process.env.NODE_ENV,
     // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
   },

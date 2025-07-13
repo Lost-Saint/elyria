@@ -27,6 +27,7 @@ export const FragmentWeb = ({ data }: Props) => {
         console.warn('Failed to copy to clipboard');
       });
   };
+
   return (
     <div className="flex h-full w-full flex-col">
       <div className="bg-sidebar flex items-center gap-x-2 border-b p-2">

@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import { ProjectForm } from '../_components/project-form';
+import { ProjectList } from '../_components/project-list';
 
 const Page = () => {
   return (
@@ -16,6 +17,7 @@ const Page = () => {
           <ProjectForm />
         </div>
       </section>
+      <ProjectList />
     </div>
   );
 };
