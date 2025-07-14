@@ -41,8 +41,11 @@ export const ProjectForm = () => {
       router.push(`/projects/${data.id}`);
     },
     onError: (error) => {
-      // TODO: redierct to pricing page if specific error
       toast.error(error.message);
+      if (error.data?.code === 'UNAUTHORIZED') {
+        router.push('/register');
+      }
+      // TODO: redierct to pricing page if specific error
     },
   });
 

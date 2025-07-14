@@ -1,19 +1,23 @@
-import { createTRPCRouter, publicProcedure } from '~/server/api/trpc';
+import { createTRPCRouter, protectedProcedure } from '~/server/api/trpc';
 import z from 'zod';
 import { inngest } from '~/inngest/client';
 import { db } from '~/server/db';
+import { TRPCError } from '@trpc/server';
 
 export const messagesRouter = createTRPCRouter({
-  getMany: publicProcedure
+  getMany: protectedProcedure
     .input(
       z.object({
         projectId: z.string().min(1, { message: 'Poject ID is required' }),
       }),
     )
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const messages = await db.message.findMany({
         where: {
           projectId: input.projectId,
+          project: {
+            userId: ctx.session.user.id,
+          },
         },
         include: {
           fragment: true,
@@ -24,7 +28,7 @@ export const messagesRouter = createTRPCRouter({
       });
       return messages;
     }),
-  create: publicProcedure
+  create: protectedProcedure
     .input(
       z.object({
         value: z
@@ -34,10 +38,21 @@ export const messagesRouter = createTRPCRouter({
         projectId: z.string().min(1, { message: 'Poject ID is required' }),
       }),
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
+      const existingProject = await db.project.findUnique({
+        where: {
+          id: input.projectId,
+          userId: ctx.session.user.id,
+        },
+      });
+
+      if (!existingProject) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Project not found' });
+      }
+
       const createdMessage = await db.message.create({
         data: {
-          projectId: input.projectId,
+          projectId: existingProject.id,
           content: input.value,
           role: 'USER',
           type: 'RESULT',
