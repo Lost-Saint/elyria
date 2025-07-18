@@ -11,6 +11,10 @@ export function lastAssistantTextMessageContent(result: AgentResult) {
     (message) => message.role === 'assistant',
   );
 
+  if (lastAssistantTextMessageIndex === -1) {
+    return undefined;
+  }
+
   const message = result.output[lastAssistantTextMessageIndex] as TextMessage | undefined;
 
   return message?.content

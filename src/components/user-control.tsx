@@ -179,7 +179,7 @@ export function AvatarDropdownExample() {
   const sampleUser: UserData = {
     name: 'John Doe',
     email: 'john.doe@example.com',
-    avatar: 'https://github.com/shadcn.png', // Placeholder avatar
+    avatar: 'https://avatars.githubusercontent.com/u/85581209?v=4&size=64', // Placeholder avatar
   };
 
   const handleLogout = () => {

@@ -32,7 +32,7 @@ export const projectsRouter = createTRPCRouter({
   getMany: protectedProcedure.query(async ({ ctx }) => {
     const projects = await db.project.findMany({
       where: {
-        userId: ctx.session.user.id, // Filter by user ID
+        userId: ctx.session.user.id,
       },
       orderBy: {
         updatedAt: 'asc',
