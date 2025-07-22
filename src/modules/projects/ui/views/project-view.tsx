@@ -12,6 +12,9 @@ import { CodeIcon, CrownIcon, EyeIcon } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import Link from 'next/link';
 import { FileExplorer } from '~/components/file-explorer';
+import { AvatarDropdownMenu } from '~/components/user-control';
+import Router from 'next/router';
+import { signOut } from '~/server/auth/auth-client';
 
 interface Props {
   projectId: string;
@@ -20,6 +23,12 @@ interface Props {
 export const ProjectView = ({ projectId }: Props) => {
   const [activeFragment, setActiveFragment] = useState<Fragment | null>(null);
   const [tabState, setTabState] = useState<'preview' | 'code'>('preview');
+
+  const user = {
+    name: 'John Doe',
+    email: 'john.doe@example.com',
+    avatar: 'https://avatars.githubusercontent.com/u/85581209?v=4&size=64', // optional
+  };
 
   return (
     <div className="h-screen">
@@ -59,6 +68,11 @@ export const ProjectView = ({ projectId }: Props) => {
                     <CrownIcon /> Upgrade
                   </Link>
                 </Button>
+                <AvatarDropdownMenu
+                  user={user}
+                  onLogout={() => signOut()}
+                  onNavigate={(path) => Router.push(path)}
+                />
               </div>
             </div>
             <TabsContent value="preview">
