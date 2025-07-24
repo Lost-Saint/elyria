@@ -35,7 +35,7 @@ export const projectsRouter = createTRPCRouter({
         userId: ctx.session.user.id,
       },
       orderBy: {
-        updatedAt: 'asc',
+        updatedAt: 'desc',
       },
     });
     return projects;
